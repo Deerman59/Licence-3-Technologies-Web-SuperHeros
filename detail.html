@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <title>Détails SuperHéros</title>
+        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+        <script src="https://unpkg.com/axios@latest"></script>
+    </head>
+    <body>
+        <div id="navbar-placeholder"></div>
+
+        <div id="app" class="container my-4">
+            <h1>Détails du Super Héros</h1>
+
+            <div v-if="hero">
+                <h2>{{ hero.name }}</h2>
+                <img :src="hero.images.lg" :alt="hero.name" class="img-fluid mb-4" style="max-width: 300px;" />
+
+                <h4>Biographie</h4>
+                <ul>
+                    <li v-for="(value, key) in hero.biography" :key="key">
+                        <strong>{{ key }}:</strong> {{ value }}
+                    </li>
+                </ul>
+                <h4>Apparence</h4>
+                    <ul>
+                        <li v-for="(value, key) in hero.appearance" :key="key">
+                            <strong>{{ key }}:</strong> {{ value }}
+                        </li>
+                    </ul>
+                <h4>Travail</h4>
+                <ul>
+                    <li v-for="(value, key) in hero.work" :key="key">
+                        <strong>{{ key }}:</strong> {{ value }}
+                    </li>
+                </ul>
+                <h4>Statistiques de Pouvoir</h4>
+                <ul>
+                    <li v-for="(value, key) in hero.powerstats" :key="key">
+                        <strong>{{ key }}:</strong> {{ value }}
+                    </li>
+                </ul>
+            </div>
+
+            <div v-else>
+                <p>Veuillez cliquer sur un super-héros de la page précédente</p>
+            </div>
+        </div>
+
+<script>
+const app = Vue.createApp({
+    data() {
+        return {
+            hero: null
+        };
+    },
+    methods: {
+        getIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+    },
+    mounted() {
+        const heroId = this.getIdFromUrl();
+        axios.get('https://cdn.jsdelivr.net/gh/rtomczak/superhero-api@0.3.0/api/all.json')
+            .then(response => {
+                const heroList = response.data;
+                this.hero = heroList.find(h => String(h.id) === String(heroId));
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des données:', error);
+            });
+    }
+});
+
+app.mount("#app");
+</script>
+
+        <script>
+            fetch('navbar.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('navbar-placeholder').innerHTML = data;
+                // Recharge manuellement le JS de Bootstrap après avoir injecté le HTML
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js';
+                document.body.appendChild(script);
+            })
+                .catch(error => {
+            console.error('Erreur:', error);
+            });
+        </script>
+    </body>
+<html>

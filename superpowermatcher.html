@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <title>SuperPower Matcher</title>
+        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+        <script src="https://unpkg.com/axios@latest"></script>
+    </head>
+    <body>
+        <div id="navbar-placeholder"></div>
+
+        <div id="app" class="container mt-4">
+        <h1>SuperPower Matcher</h1>
+
+        <!-- Sliders pour les superpouvoirs -->
+        <div class="slider-container">
+            <div v-for="(label, key) in translations" :key="key" class="text-center">
+                <input type="range" class="form-range slider-vertical"
+                       min="0" max="100" v-model.number="criteria[key]">
+                <div class="stat-label">{{ label }}<br><strong>{{ criteria[key] }}</strong></div>
+            </div>
+        </div>
+
+        <button class="btn btn-primary mb-4" @click="filterHeroes">Rechercher</button>
+
+        <div v-if="filteredHeroes.length > 0">
+            <h3>Résultats :</h3>
+            <ul class="list-group">
+                <li v-for="hero in filteredHeroes" :key="hero.id" class="list-group-item">
+                    <strong>{{ hero.name }}</strong>
+                    <ul>
+                        <li v-for="(value, key) in hero.powerstats" :key="key">
+                            {{ translations[key] || key }} : {{ value }}
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <div v-else>
+            <p>Aucun super-héros ne correspond à ces critères.</p>
+        </div>
+    <script>
+    const { createApp } = Vue;
+
+    createApp({
+        data() {
+            return {
+                superheros: [],
+                criteria: {
+                    intelligence: 0,
+                    strength: 0,
+                    speed: 0,
+                    durability: 0,
+                    power: 0,
+                    combat: 0
+                },
+                translations: {
+                    intelligence: "Intelligence",
+                    strength: "Force",
+                    speed: "Vitesse",
+                    durability: "Endurance",
+                    power: "Puissance",
+                    combat: "Combat"
+                },
+                filteredHeroes: []
+            };
+        },
+        methods: {
+            filterHeroes() {
+                this.filteredHeroes = this.superheros
+                    .filter(hero => {
+                        const stats = hero.powerstats || {};
+                        return Object.keys(this.criteria).every(key => {
+                            const value = parseInt(stats[key]);
+                            //si le critère est inférieur ou égale à la valeur mise 
+                            //alors elle affiche les super-héros avec une stat supérieure ou égale à la valeur mise
+                            return !isNaN(value) && value >= this.criteria[key];
+                        });
+                    })
+                    .sort((a, b) => a.name.localeCompare(b.name));
+            }
+            },
+            mounted() {
+                axios.get('https://cdn.jsdelivr.net/gh/rtomczak/superhero-api@0.3.0/api/all.json')
+                    .then(response => {
+                        this.superheros = response.data.filter(h => h.powerstats); // S'assure que powerstats existe
+                    });
+            }
+        }).mount('#app');
+        </script>
+
+        <script>
+            fetch('navbar.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('navbar-placeholder').innerHTML = data;
+                // Recharge manuellement le JS de Bootstrap après avoir injecté le HTML
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js';
+                document.body.appendChild(script);
+            })
+                .catch(error => {
+            console.error('Erreur:', error);
+            });
+        </script>
+    </body>
+<html>
